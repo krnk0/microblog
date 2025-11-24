@@ -1,0 +1,26 @@
+export interface Env {
+  // D1 Database
+  DB: D1Database;
+
+  // Secrets
+  AUTH_PASSWORD: string;
+  JWT_SECRET: string;
+}
+
+export interface Post {
+  id: number;
+  content: string;
+  created_at: string;
+}
+
+export interface CreatePostRequest {
+  content: string;
+}
+
+export interface LoginRequest {
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+}
