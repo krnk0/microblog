@@ -6,7 +6,7 @@ compatibility_date = "2024-11-24"
 [[d1_databases]]
 binding = "DB"
 database_name = "microblog-db"
-database_id = "local"  # ローカル開発用、本番デプロイ時に実際のIDに置き換え
+database_id = "0401e205-3639-479f-a203-46c664010b23"
 
 # Workers Secrets (ローカル開発用は .dev.vars に記載)
 # AUTH_PASSWORD = "your-password-here"
