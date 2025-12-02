@@ -115,7 +115,7 @@ async function handleCreatePost(
   }
 
   const result = await env.DB.prepare(
-    'INSERT INTO posts (content, created_at) VALUES (?, datetime("now")) RETURNING *'
+    'INSERT INTO posts (content, created_at) VALUES (?, datetime("now") || "Z") RETURNING *'
   ).bind(body.content).first<Post>();
 
   return new Response(JSON.stringify({ post: result }), {
