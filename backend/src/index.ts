@@ -5,12 +5,20 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    // CORS headers
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
+    // CORS headers (dynamic origin for credentials support)
+    const origin = request.headers.get('Origin') || '';
+    const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'https://mb.krnk.app'];
+    const allowOrigin = allowedOrigins.includes(origin) ? origin : '';
+
+    const corsHeaders: Record<string, string> = {
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
     };
+
+    if (allowOrigin) {
+      corsHeaders['Access-Control-Allow-Origin'] = allowOrigin;
+    }
 
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
@@ -22,6 +30,11 @@ export default {
       // POST /api/auth/login - ログイン（JWT発行）
       if (url.pathname === '/api/auth/login' && request.method === 'POST') {
         return await handleLogin(request, env, corsHeaders);
+      }
+
+      // POST /api/auth/logout - ログアウト（Cookie削除）
+      if (url.pathname === '/api/auth/logout' && request.method === 'POST') {
+        return await handleLogout(corsHeaders);
       }
 
       // GET /api/posts - 投稿一覧
@@ -70,13 +83,27 @@ export default {
   },
 };
 
-// 認証チェック（JWT検証）
+// 認証チェック（JWT検証 - HttpOnly Cookieから取得）
 async function isAuthenticated(request: Request, env: Env): Promise<boolean> {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) return false;
+  // まずCookieから取得を試みる
+  const cookieHeader = request.headers.get('Cookie');
+  if (cookieHeader) {
+    const cookies = cookieHeader.split(';').map(c => c.trim());
+    const authCookie = cookies.find(c => c.startsWith('auth_token='));
+    if (authCookie) {
+      const token = authCookie.slice('auth_token='.length);
+      return await verifyToken(token, env);
+    }
+  }
 
-  const token = authHeader.replace('Bearer ', '');
-  return await verifyToken(token, env);
+  // フォールバック: Authorizationヘッダーからも取得（後方互換性）
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    const token = authHeader.replace('Bearer ', '');
+    return await verifyToken(token, env);
+  }
+
+  return false;
 }
 
 // GET /api/posts - 投稿一覧取得
@@ -147,7 +174,19 @@ async function handleDeletePost(
   });
 }
 
-// POST /api/auth/login - ログイン（JWT発行）
+// POST /api/auth/logout - ログアウト（Cookie削除）
+async function handleLogout(corsHeaders: Record<string, string>): Promise<Response> {
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      'Set-Cookie': 'auth_token=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/',
+    },
+  });
+}
+
+// POST /api/auth/login - ログイン（HttpOnly Cookie発行）
 async function handleLogin(
   request: Request,
   env: Env,
@@ -173,8 +212,13 @@ async function handleLogin(
   // JWT生成
   const token = await generateToken(env);
 
-  return new Response(JSON.stringify({ token }), {
+  // HttpOnly Cookieとして発行（7日間有効、SameSite=Lax）
+  return new Response(JSON.stringify({ success: true }), {
     status: 200,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      'Set-Cookie': `auth_token=${token}; HttpOnly; Secure; SameSite=Lax; Max-Age=604800; Path=/`,
+    },
   });
 }

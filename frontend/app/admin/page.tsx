@@ -8,7 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authToken, setAuthToken] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [content, setContent] = useState('');
@@ -18,7 +18,9 @@ export default function AdminPage() {
   // 投稿一覧を取得
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/posts`);
+      const res = await fetch(`${API_URL}/api/posts`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch posts');
       const data = await res.json();
       setPosts(data.posts || []);
@@ -27,19 +29,35 @@ export default function AdminPage() {
     }
   };
 
-  // 初回読み込み（認証状態復元 + 投稿取得）
+  // 初回読み込み（認証状態確認 + 投稿取得）
   useEffect(() => {
-    // LocalStorageから認証トークンを復元
-    const savedToken = localStorage.getItem('authToken');
-    if (savedToken) {
-      setAuthToken(savedToken);
-      setIsAuthenticated(true);
-    }
-
+    // 認証状態は自動チェック（Cookieベース）
+    checkAuth();
     fetchPosts();
   }, []);
 
-  // 認証（JWT取得）
+  // 認証状態を確認（投稿作成APIで401が返ればログアウト状態）
+  const checkAuth = async () => {
+    try {
+      // 認証が必要なエンドポイントにリクエストして確認
+      const res = await fetch(`${API_URL}/api/posts`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: '' }),
+      });
+      // 空コンテンツなので400が返るが、401でなければ認証済み
+      if (res.status !== 401) {
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
+
+  // 認証（HttpOnly Cookieで管理）
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password.trim()) return;
@@ -48,9 +66,10 @@ export default function AdminPage() {
     setError(null);
 
     try {
-      // パスワードを送信してJWTを取得
+      // パスワードを送信してHttpOnly Cookieを取得
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -63,12 +82,10 @@ export default function AdminPage() {
       }
 
       const data = await res.json();
-      const token = data.token;
-
-      setAuthToken(token);
-      setIsAuthenticated(true);
-      localStorage.setItem('authToken', token); // JWTをLocalStorageに保存
-      setPassword('');
+      if (data.success) {
+        setIsAuthenticated(true);
+        setPassword('');
+      }
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'ログインに失敗しました');
@@ -77,11 +94,19 @@ export default function AdminPage() {
     }
   };
 
-  // ログアウト
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setAuthToken('');
-    localStorage.removeItem('authToken'); // LocalStorageから削除
+  // ログアウト（Cookieを削除）
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      setIsAuthenticated(false);
+    } catch (err) {
+      console.error('Logout error:', err);
+      // エラーでもログアウト状態にする
+      setIsAuthenticated(false);
+    }
   };
 
   // 投稿を作成
@@ -95,9 +120,9 @@ export default function AdminPage() {
     try {
       const res = await fetch(`${API_URL}/api/posts`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({ content }),
       });
@@ -124,9 +149,7 @@ export default function AdminPage() {
     try {
       const res = await fetch(`${API_URL}/api/posts/${postId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-        },
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -140,6 +163,15 @@ export default function AdminPage() {
       alert('削除に失敗しました');
     }
   };
+
+  // 認証チェック中
+  if (isCheckingAuth) {
+    return (
+      <div className="max-w-md mx-auto p-4 sm:p-6 min-h-screen flex items-center justify-center">
+        <p className="text-foreground/40">Loading...</p>
+      </div>
+    );
+  }
 
   // 認証前
   if (!isAuthenticated) {
