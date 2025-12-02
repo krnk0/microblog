@@ -6,9 +6,11 @@
 - [x] PWA対応（manifest、アイコン）
 - [x] カスタムドメイン設定（mb.krnk.app, mb-api.krnk.app）
 - [x] JWT認証
+- [x] PWAデプロイ（start_url: /admin）
 
-### 🚧 進行中
-- [ ] PWAデプロイ（start_url: /admin）
+### 🚧 次回やる（UI改善）
+- [ ] 削除ボタンのレイアウト修正（時間表示の横 or ...メニュー）
+- [ ] JWT有効期限の延長検討（24h → 7d or 30d）
 
 ## Phase 2: コア機能追加
 

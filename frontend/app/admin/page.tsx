@@ -229,20 +229,20 @@ export default function AdminPage() {
               key={post.id}
               className="p-4 bg-foreground/5 border border-foreground/10 rounded-lg"
             >
-              <div className="flex justify-between items-start mb-2">
-                <p className="whitespace-pre-wrap break-words flex-1">
-                  {post.content}
-                </p>
+              <p className="whitespace-pre-wrap break-words mb-2">
+                {post.content}
+              </p>
+              <div className="flex justify-between items-center">
+                <time className="text-sm text-foreground/40">
+                  {new Date(post.created_at).toLocaleString('ja-JP')}
+                </time>
                 <button
                   onClick={() => handleDelete(post.id)}
-                  className="ml-4 text-red-500 hover:text-red-400 text-sm"
+                  className="text-red-500 hover:text-red-400 text-sm"
                 >
                   削除
                 </button>
               </div>
-              <time className="text-sm text-foreground/40">
-                {new Date(post.created_at).toLocaleString('ja-JP')}
-              </time>
             </article>
           ))
         )}

@@ -8,7 +8,7 @@ export async function generateToken(env: Env): Promise<string> {
   const token = await new SignJWT({})
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('24h') // 24時間有効
+    .setExpirationTime('7d') // 7日間有効
     .sign(secret);
 
   return token;
