@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Microblog',
     short_name: 'MB',
     description: 'Personal microblog powered by ActivityPub',
-    start_url: '/',
+    start_url: '/admin',
     display: 'standalone',
     background_color: '#000000',
     theme_color: '#000000',
