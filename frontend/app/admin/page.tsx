@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Post } from '../../types';
+import { linkifyContent } from '../../utils/linkify';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
@@ -262,7 +263,7 @@ export default function AdminPage() {
               className="p-4 bg-foreground/5 border border-foreground/10 rounded-lg"
             >
               <p className="whitespace-pre-wrap break-words mb-2">
-                {post.content}
+                {linkifyContent(post.content)}
               </p>
               <div className="flex justify-between items-center">
                 <time className="text-sm text-foreground/40">

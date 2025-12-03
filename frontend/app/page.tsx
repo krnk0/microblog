@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Post } from '../types';
+import { linkifyContent } from '../utils/linkify';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
@@ -52,7 +53,7 @@ export default function Home() {
               className="p-4 bg-foreground/5 border border-foreground/10 rounded-lg"
             >
               <p className="whitespace-pre-wrap break-words mb-2">
-                {post.content}
+                {linkifyContent(post.content)}
               </p>
               <time className="text-sm text-foreground/40">
                 {new Date(post.created_at).toLocaleString('ja-JP')}
