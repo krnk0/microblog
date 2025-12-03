@@ -8,5 +8,10 @@ binding = "DB"
 database_name = "microblog-db"
 database_id = "0401e205-3639-479f-a203-46c664010b23"
 
+# R2 Storage
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "microblog-media"
+
 # Workers Secrets (ローカル開発用は .dev.vars に記載)
 # AUTH_PASSWORD = "your-password-here"
