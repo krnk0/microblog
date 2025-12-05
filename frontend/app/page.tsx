@@ -55,6 +55,13 @@ export default function Home() {
               <p className="whitespace-pre-wrap break-words mb-2">
                 {linkifyContent(post.content)}
               </p>
+              {post.image_url && (
+                <img
+                  src={post.image_url}
+                  alt=""
+                  className="max-w-full max-h-96 rounded-lg border border-foreground/10 mb-2"
+                />
+              )}
               <time className="text-sm text-foreground/40">
                 {new Date(post.created_at).toLocaleString('ja-JP')}
               </time>

@@ -15,6 +15,10 @@ out/
 # Cloudflare
 .wrangler/
 
+# Backups
+backups/
+*.sql
+
 # IDE
 .vscode/
 .idea/
