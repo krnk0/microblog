@@ -2,10 +2,10 @@ import type { Env } from './types';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
-type SupportedImageMime = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+export type SupportedImageMime = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
 
 // マジックバイトから実際の画像形式を検出
-function detectImageType(buffer: ArrayBuffer): SupportedImageMime | null {
+export function detectImageType(buffer: ArrayBuffer): SupportedImageMime | null {
   const bytes = new Uint8Array(buffer);
   if (bytes.length < 12) return null;
 

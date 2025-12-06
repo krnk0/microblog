@@ -8,7 +8,9 @@
     "deploy": "wrangler deploy",
     "db:migrate:local": "wrangler d1 execute microblog-db --local --file=./migrations/0001_create_posts.sql",
     "db:migrate:remote": "wrangler d1 execute microblog-db --remote --file=./migrations/0001_create_posts.sql",
-    "db:create": "wrangler d1 create microblog-db"
+    "db:create": "wrangler d1 create microblog-db",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251121.0",
     "typescript": "^5.9.3",
+    "vitest": "^4.0.14",
     "wrangler": "^4.50.0"
   },
   "dependencies": {
