@@ -3,6 +3,7 @@ import { isAuthenticated, handleLogin, handleLogout } from './auth';
 import { handleGetPosts, handleCreatePost, handleDeletePost } from './posts';
 import { handleUploadMedia, handleGetMedia } from './media';
 import { handleRssFeed } from './feed';
+import { handleWebFinger, handleActor, handleOutbox } from './activitypub';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -86,6 +87,19 @@ export default {
       // Feed routes
       if (url.pathname === '/feed.xml' && request.method === 'GET') {
         return await handleRssFeed(env);
+      }
+
+      // ActivityPub routes
+      if (url.pathname === '/.well-known/webfinger' && request.method === 'GET') {
+        return await handleWebFinger(request);
+      }
+
+      if (url.pathname === '/api/activitypub/actor' && request.method === 'GET') {
+        return await handleActor(env);
+      }
+
+      if (url.pathname === '/api/activitypub/outbox' && request.method === 'GET') {
+        return await handleOutbox(env);
       }
 
       // 404
