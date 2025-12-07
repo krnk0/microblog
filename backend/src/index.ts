@@ -103,7 +103,7 @@ export default {
       }
 
       if (url.pathname === '/api/activitypub/outbox' && request.method === 'GET') {
-        return await handleOutbox(env);
+        return await handleOutbox(request, env);
       }
 
       // 404
