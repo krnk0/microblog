@@ -5,6 +5,7 @@
 
 const DOMAIN = 'mb.krnk.app';
 const API_DOMAIN = 'mb-api.krnk.app';
+const ALLOWED_DOMAINS = [DOMAIN, API_DOMAIN];
 const USERNAME = 'default';
 
 export async function handleWebFinger(request: Request): Promise<Response> {
@@ -30,8 +31,8 @@ export async function handleWebFinger(request: Request): Promise<Response> {
   const acct = resource.slice(5); // Remove 'acct:'
   const [user, domain] = acct.split('@');
 
-  // Validate user and domain
-  if (domain !== DOMAIN || user !== USERNAME) {
+  // Validate user and domain (accept both mb.krnk.app and mb-api.krnk.app)
+  if (!ALLOWED_DOMAINS.includes(domain) || user !== USERNAME) {
     return new Response(JSON.stringify({ error: 'User not found' }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' },

@@ -3,7 +3,7 @@ import { isAuthenticated, handleLogin, handleLogout } from './auth';
 import { handleGetPosts, handleCreatePost, handleDeletePost } from './posts';
 import { handleUploadMedia, handleGetMedia } from './media';
 import { handleRssFeed } from './feed';
-import { handleWebFinger, handleActor, handleOutbox } from './activitypub';
+import { handleWebFinger, handleHostMeta, handleActor, handleOutbox } from './activitypub';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -92,6 +92,10 @@ export default {
       // ActivityPub routes
       if (url.pathname === '/.well-known/webfinger' && request.method === 'GET') {
         return await handleWebFinger(request);
+      }
+
+      if (url.pathname === '/.well-known/host-meta' && request.method === 'GET') {
+        return handleHostMeta();
       }
 
       if (url.pathname === '/api/activitypub/actor' && request.method === 'GET') {
