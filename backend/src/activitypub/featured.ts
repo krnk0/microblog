@@ -7,7 +7,7 @@
 import type { Env, Post } from '../types';
 
 const DOMAIN = 'mb.krnk.app';
-const API_DOMAIN = 'mb-api.krnk.app';
+const API_DOMAIN = 'mb.krnk.app';
 
 // Number of posts to include in featured collection
 const FEATURED_COUNT = 5;

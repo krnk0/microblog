@@ -5,6 +5,9 @@ export interface Env {
   // R2 Storage
   MEDIA: R2Bucket;
 
+  // Static Assets
+  ASSETS: Fetcher;
+
   // Secrets
   AUTH_PASSWORD: string;
   JWT_SECRET: string;

@@ -6,7 +6,7 @@
 import type { Env } from '../types';
 import { getPrivateKey, signRequest } from './keys';
 
-const API_DOMAIN = 'mb-api.krnk.app';
+const API_DOMAIN = 'mb.krnk.app';
 const USER_ID = 'default';
 
 interface Activity {

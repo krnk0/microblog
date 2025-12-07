@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Post } from '../types';
 import { linkifyContent } from '../utils/linkify';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -48,9 +48,10 @@ export default function Home() {
           </p>
         ) : (
           posts.map((post) => (
-            <article
+            <a
               key={post.id}
-              className="p-4 bg-foreground/5 border border-foreground/10 rounded-lg"
+              href={`/posts/${post.id}`}
+              className="block p-4 bg-foreground/5 border border-foreground/10 rounded-lg hover:bg-foreground/10 transition-colors"
             >
               <p className="whitespace-pre-wrap break-words mb-2">
                 {linkifyContent(post.content)}
@@ -65,7 +66,7 @@ export default function Home() {
               <time className="text-sm text-foreground/40">
                 {new Date(post.created_at).toLocaleString('ja-JP')}
               </time>
-            </article>
+            </a>
           ))
         )}
       </div>

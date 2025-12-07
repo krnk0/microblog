@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Post } from '../../types';
 import { linkifyContent } from '../../utils/linkify';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export default function AdminPage() {
   const [password, setPassword] = useState('');

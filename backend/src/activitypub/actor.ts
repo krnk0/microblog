@@ -7,7 +7,8 @@ import type { Env } from '../types';
 import { getPublicKeyPem } from './keys';
 
 const DOMAIN = 'mb.krnk.app';
-const API_DOMAIN = 'mb-api.krnk.app';
+// After domain unification, API is on the same domain
+const API_DOMAIN = 'mb.krnk.app';
 const USERNAME = 'default';
 
 export async function handleActor(env: Env): Promise<Response> {

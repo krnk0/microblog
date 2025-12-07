@@ -4,8 +4,9 @@
  */
 
 const DOMAIN = 'mb.krnk.app';
-const API_DOMAIN = 'mb-api.krnk.app';
-const ALLOWED_DOMAINS = [DOMAIN, API_DOMAIN];
+// After domain unification, everything is on the same domain
+// Still accept legacy mb-api.krnk.app for backward compatibility
+const ALLOWED_DOMAINS = [DOMAIN, 'mb-api.krnk.app'];
 const USERNAME = 'default';
 
 export async function handleWebFinger(request: Request): Promise<Response> {
@@ -42,12 +43,12 @@ export async function handleWebFinger(request: Request): Promise<Response> {
   // Return WebFinger response
   const response = {
     subject: resource,
-    aliases: [`https://${API_DOMAIN}/api/activitypub/actor`],
+    aliases: [`https://${DOMAIN}/api/activitypub/actor`],
     links: [
       {
         rel: 'self',
         type: 'application/activity+json',
-        href: `https://${API_DOMAIN}/api/activitypub/actor`,
+        href: `https://${DOMAIN}/api/activitypub/actor`,
       },
       {
         rel: 'http://webfinger.net/rel/profile-page',

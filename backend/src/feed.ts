@@ -41,7 +41,7 @@ export async function handleRssFeed(env: Env): Promise<Response> {
     <description>personal microblog</description>
     <language>ja</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
-    <atom:link href="https://mb-api.krnk.app/feed.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="https://mb.krnk.app/feed.xml" rel="self" type="application/rss+xml"/>
 ${items}
   </channel>
 </rss>`;

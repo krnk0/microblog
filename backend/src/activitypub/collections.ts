@@ -3,7 +3,7 @@
  * Returns empty collections for now
  */
 
-const API_DOMAIN = 'mb-api.krnk.app';
+const API_DOMAIN = 'mb.krnk.app';
 
 export function handleFollowing(): Response {
   const collection = {

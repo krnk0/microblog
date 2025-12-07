@@ -4,6 +4,7 @@ import { handleGetPost, handleGetPosts, handleCreatePost, handleDeletePost } fro
 import { handleUploadMedia, handleGetMedia } from './media';
 import { handleRssFeed } from './feed';
 import { handleWebFinger, handleHostMeta, handleActor, handleOutbox, handleInbox, handlePost, handleFollowing, handleFollowers, handleFeatured } from './activitypub';
+import { handlePostPage } from './pages/post';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -134,7 +135,20 @@ export default {
         return await handlePost(postId, env);
       }
 
-      // 404
+      // Post page (HTML with Content Negotiation for ActivityPub)
+      const postPageMatch = url.pathname.match(/^\/posts\/(\d+)$/);
+      if (postPageMatch && request.method === 'GET') {
+        const postId = parseInt(postPageMatch[1]);
+        return await handlePostPage(postId, request, env);
+      }
+
+      // Try to serve static file
+      const assetResponse = await env.ASSETS.fetch(request);
+      if (assetResponse.status !== 404) {
+        return assetResponse;
+      }
+
+      // 404 for API routes
       return new Response(JSON.stringify({ error: 'Not Found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

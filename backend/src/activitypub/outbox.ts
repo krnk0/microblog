@@ -6,7 +6,7 @@
 import type { Env, Post } from '../types';
 
 const DOMAIN = 'mb.krnk.app';
-const API_DOMAIN = 'mb-api.krnk.app';
+const API_DOMAIN = 'mb.krnk.app';
 
 /**
  * Convert database datetime to ISO 8601 format
