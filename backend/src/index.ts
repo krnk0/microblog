@@ -1,9 +1,9 @@
 import type { Env } from './types';
 import { isAuthenticated, handleLogin, handleLogout } from './auth';
-import { handleGetPosts, handleCreatePost, handleDeletePost } from './posts';
+import { handleGetPost, handleGetPosts, handleCreatePost, handleDeletePost } from './posts';
 import { handleUploadMedia, handleGetMedia } from './media';
 import { handleRssFeed } from './feed';
-import { handleWebFinger, handleHostMeta, handleActor, handleOutbox } from './activitypub';
+import { handleWebFinger, handleHostMeta, handleActor, handleOutbox, handleInbox, handlePost } from './activitypub';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -43,6 +43,12 @@ export default {
       // Posts routes
       if (url.pathname === '/api/posts' && request.method === 'GET') {
         return await handleGetPosts(env, corsHeaders);
+      }
+
+      const getPostMatch = url.pathname.match(/^\/api\/posts\/(\d+)$/);
+      if (getPostMatch && request.method === 'GET') {
+        const postId = parseInt(getPostMatch[1]);
+        return await handleGetPost(postId, env, corsHeaders);
       }
 
       if (url.pathname === '/api/posts' && request.method === 'POST') {
@@ -104,6 +110,16 @@ export default {
 
       if (url.pathname === '/api/activitypub/outbox' && request.method === 'GET') {
         return await handleOutbox(request, env);
+      }
+
+      if (url.pathname === '/api/activitypub/inbox' && request.method === 'POST') {
+        return await handleInbox(request, env);
+      }
+
+      const apPostMatch = url.pathname.match(/^\/api\/activitypub\/posts\/(\d+)$/);
+      if (apPostMatch && request.method === 'GET') {
+        const postId = parseInt(apPostMatch[1]);
+        return await handlePost(postId, env);
       }
 
       // 404

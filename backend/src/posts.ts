@@ -1,5 +1,28 @@
 import type { Env, Post, CreatePostRequest } from './types';
 
+// GET /api/posts/:id - 単一投稿取得
+export async function handleGetPost(
+  postId: number,
+  env: Env,
+  corsHeaders: Record<string, string>
+): Promise<Response> {
+  const post = await env.DB.prepare('SELECT * FROM posts WHERE id = ?')
+    .bind(postId)
+    .first<Post>();
+
+  if (!post) {
+    return new Response(JSON.stringify({ error: 'Post not found' }), {
+      status: 404,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify({ post }), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 // GET /api/posts - 投稿一覧取得
 export async function handleGetPosts(
   env: Env,

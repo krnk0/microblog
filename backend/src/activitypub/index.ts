@@ -6,4 +6,6 @@ export { handleWebFinger } from './webfinger';
 export { handleHostMeta } from './hostmeta';
 export { handleActor } from './actor';
 export { handleOutbox } from './outbox';
-export { getPublicKeyPem, generateAndStoreKeyPair } from './keys';
+export { handleInbox } from './inbox';
+export { handlePost } from './post';
+export { getPublicKeyPem, generateAndStoreKeyPair, getPrivateKey, signRequest } from './keys';

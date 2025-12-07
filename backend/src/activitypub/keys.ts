@@ -87,3 +87,86 @@ export async function getPublicKeyPem(db: D1Database, userId: string): Promise<s
   const jwk = JSON.parse(row.rsa_public_key);
   return jwkToPem(jwk);
 }
+
+/**
+ * Get the private key as CryptoKey for signing
+ */
+export async function getPrivateKey(db: D1Database, userId: string): Promise<CryptoKey | null> {
+  const row = await db
+    .prepare('SELECT rsa_private_key FROM account_keys WHERE user_id = ?')
+    .bind(userId)
+    .first<{ rsa_private_key: string }>();
+
+  if (!row) {
+    return null;
+  }
+
+  const jwk = JSON.parse(row.rsa_private_key);
+  return crypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+}
+
+/**
+ * Convert ArrayBuffer to base64 string
+ */
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+}
+
+/**
+ * Sign an HTTP request for ActivityPub delivery
+ * Implements draft-cavage-http-signatures
+ */
+export async function signRequest(
+  targetUrl: string,
+  body: string,
+  privateKey: CryptoKey,
+  keyId: string
+): Promise<Headers> {
+  const url = new URL(targetUrl);
+  const headers = new Headers();
+
+  // 1. Set required headers
+  headers.set('Host', url.host);
+  headers.set('Date', new Date().toUTCString());
+  headers.set('Content-Type', 'application/activity+json');
+
+  // 2. Calculate body digest
+  const bodyBytes = new TextEncoder().encode(body);
+  const digestBuffer = await crypto.subtle.digest('SHA-256', bodyBytes);
+  const digestBase64 = arrayBufferToBase64(digestBuffer);
+  headers.set('Digest', `SHA-256=${digestBase64}`);
+
+  // 3. Build signature string
+  const signedHeaders = ['(request-target)', 'host', 'date', 'digest'];
+  const signatureString = [
+    `(request-target): post ${url.pathname}`,
+    `host: ${url.host}`,
+    `date: ${headers.get('Date')}`,
+    `digest: ${headers.get('Digest')}`,
+  ].join('\n');
+
+  // 4. Sign
+  const signatureBuffer = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    privateKey,
+    new TextEncoder().encode(signatureString)
+  );
+  const signatureBase64 = arrayBufferToBase64(signatureBuffer);
+
+  // 5. Build Signature header
+  const signatureHeader = [
+    `keyId="${keyId}"`,
+    `algorithm="rsa-sha256"`,
+    `headers="${signedHeaders.join(' ')}"`,
+    `signature="${signatureBase64}"`,
+  ].join(',');
+  headers.set('Signature', signatureHeader);
+
+  return headers;
+}

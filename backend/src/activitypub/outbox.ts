@@ -76,7 +76,7 @@ export async function handleOutbox(request: Request, env: Env): Promise<Response
         published: published,
         to: [publicTarget],
         cc: [followersUrl],
-        url: `https://${DOMAIN}/#post-${post.id}`,
+        url: `https://${DOMAIN}/posts/${post.id}`,
       },
     };
   });
