@@ -3,7 +3,7 @@ import { isAuthenticated, handleLogin, handleLogout } from './auth';
 import { handleGetPost, handleGetPosts, handleCreatePost, handleDeletePost } from './posts';
 import { handleUploadMedia, handleGetMedia } from './media';
 import { handleRssFeed } from './feed';
-import { handleWebFinger, handleHostMeta, handleActor, handleOutbox, handleInbox, handlePost } from './activitypub';
+import { handleWebFinger, handleHostMeta, handleActor, handleOutbox, handleInbox, handlePost, handleFollowing, handleFollowers, handleFeatured } from './activitypub';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -114,6 +114,18 @@ export default {
 
       if (url.pathname === '/api/activitypub/inbox' && request.method === 'POST') {
         return await handleInbox(request, env);
+      }
+
+      if (url.pathname === '/api/activitypub/following' && request.method === 'GET') {
+        return handleFollowing();
+      }
+
+      if (url.pathname === '/api/activitypub/followers' && request.method === 'GET') {
+        return handleFollowers();
+      }
+
+      if (url.pathname === '/api/activitypub/featured' && request.method === 'GET') {
+        return await handleFeatured(env);
       }
 
       const apPostMatch = url.pathname.match(/^\/api\/activitypub\/posts\/(\d+)$/);

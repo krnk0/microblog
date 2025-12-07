@@ -35,6 +35,7 @@ export async function handleActor(env: Env): Promise<Response> {
     outbox: `https://${API_DOMAIN}/api/activitypub/outbox`,
     followers: `https://${API_DOMAIN}/api/activitypub/followers`,
     following: `https://${API_DOMAIN}/api/activitypub/following`,
+    featured: `https://${API_DOMAIN}/api/activitypub/featured`,
     publicKey: {
       id: `${actorUrl}#main-key`,
       owner: actorUrl,
