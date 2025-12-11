@@ -303,7 +303,7 @@ export default function AdminPage() {
           onChange={(e) => setContent(e.target.value)}
           className="w-full p-3 bg-foreground/5 border border-foreground/10 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-foreground/20"
           rows={3}
-          maxLength={280}
+          maxLength={2000}
         />
 
         {/* 画像プレビュー */}
@@ -337,7 +337,7 @@ export default function AdminPage() {
               />
             </label>
             <span className="text-sm text-foreground/40">
-              {content.length} / 280
+              {content.length} / 2000
             </span>
           </div>
           <button

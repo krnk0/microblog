@@ -53,9 +53,9 @@ export async function handleCreatePost(
     });
   }
 
-  // 文字数制限（Twitterライクに280文字）
-  if (body.content.length > 280) {
-    return new Response(JSON.stringify({ error: 'Content too long (max 280 characters)' }), {
+  // 文字数制限（2000文字）
+  if (body.content.length > 2000) {
+    return new Response(JSON.stringify({ error: 'Content too long (max 2000 characters)' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
