@@ -5,6 +5,8 @@
     "lib": ["ES2022"],
     "moduleResolution": "node",
     "types": ["@cloudflare/workers-types"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,

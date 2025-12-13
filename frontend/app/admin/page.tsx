@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Post } from '../../types';
-import { linkifyContent } from '../../utils/linkify';
+import { formatContent } from '../../utils/formatContent';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -365,9 +365,9 @@ export default function AdminPage() {
               key={post.id}
               className="p-4 bg-foreground/5 border border-foreground/10 rounded-lg"
             >
-              <p className="whitespace-pre-wrap break-words mb-2">
-                {linkifyContent(post.content)}
-              </p>
+              <div className="whitespace-pre-wrap break-words mb-2">
+                {formatContent(post.content)}
+              </div>
               {post.image_url && (
                 <img
                   src={post.image_url}
