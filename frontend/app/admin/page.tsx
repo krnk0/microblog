@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import type { Post } from '../../types';
 import { formatContent } from '../../utils/formatContent';
 
+declare const Prism: { highlightAll: () => void } | undefined;
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export default function AdminPage() {
@@ -41,6 +43,13 @@ export default function AdminPage() {
     checkAuth();
     fetchPosts();
   }, []);
+
+  // Prism.js でシンタックスハイライト
+  useEffect(() => {
+    if (typeof Prism !== 'undefined') {
+      Prism.highlightAll();
+    }
+  }, [posts]);
 
   // 認証状態を確認（投稿作成APIで401が返ればログアウト状態）
   const checkAuth = async () => {

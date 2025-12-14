@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import type { Post } from '../types';
 import { formatContent } from '../utils/formatContent';
 
+declare const Prism: { highlightAll: () => void } | undefined;
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export default function Home() {
@@ -28,6 +30,13 @@ export default function Home() {
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  // Prism.js でシンタックスハイライト
+  useEffect(() => {
+    if (typeof Prism !== 'undefined') {
+      Prism.highlightAll();
+    }
+  }, [posts]);
 
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">

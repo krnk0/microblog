@@ -215,18 +215,7 @@ function PostPage({ post, postUrl, description }: PostPageProps): VNode {
 
         {/* Syntax highlighting */}
         <link rel="stylesheet" href="/assets/prism-tomorrow.css" />
-        <script src="/assets/prism.js"></script>
-        <script src="/assets/prism-c.min.js"></script>
-        <script src="/assets/prism-cpp.min.js"></script>
-        <script src="/assets/prism-javascript.min.js"></script>
-        <script src="/assets/prism-typescript.min.js"></script>
-        <script src="/assets/prism-python.min.js"></script>
-        <script src="/assets/prism-bash.min.js"></script>
-        <script src="/assets/prism-rust.min.js"></script>
-        <script src="/assets/prism-go.min.js"></script>
-        <script src="/assets/prism-json.min.js"></script>
-        <script src="/assets/prism-sql.min.js"></script>
-        <script src="/assets/prism-java.min.js"></script>
+        <script src="/assets/prism-bundle.min.js"></script>
 
         <style
           dangerouslySetInnerHTML={{

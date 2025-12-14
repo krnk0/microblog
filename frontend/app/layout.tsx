@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,10 +38,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <link rel="stylesheet" href="/assets/prism-tomorrow.css" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} dark bg-background text-foreground font-sans leading-relaxed antialiased`}
       >
         {children}
+        <Script src="/assets/prism-bundle.min.js" strategy="beforeInteractive" />
       </body>
     </html>
   );
