@@ -40,12 +40,15 @@ export default function RootLayout({
     <html lang="ja">
       <head>
         <link rel="stylesheet" href="/assets/prism-tomorrow.css" />
+        <link rel="stylesheet" href="/assets/katex.min.css" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} dark bg-background text-foreground font-sans leading-relaxed antialiased`}
       >
         {children}
         <Script src="/assets/prism-bundle.min.js" strategy="beforeInteractive" />
+        <Script src="/assets/katex.min.js" strategy="beforeInteractive" />
+        <Script src="/assets/auto-render.min.js" strategy="beforeInteractive" />
       </body>
     </html>
   );

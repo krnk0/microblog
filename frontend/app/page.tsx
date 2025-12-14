@@ -5,6 +5,7 @@ import type { Post } from '../types';
 import { formatContent } from '../utils/formatContent';
 
 declare const Prism: { highlightAll: () => void } | undefined;
+declare const renderMathInElement: ((element: Element, options?: object) => void) | undefined;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -35,6 +36,22 @@ export default function Home() {
   useEffect(() => {
     if (typeof Prism !== 'undefined') {
       Prism.highlightAll();
+    }
+  }, [posts]);
+
+  // KaTeX で数式レンダリング
+  useEffect(() => {
+    if (typeof renderMathInElement !== 'undefined') {
+      const container = document.querySelector('.space-y-4');
+      if (container) {
+        renderMathInElement(container, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+          ],
+          throwOnError: false,
+        });
+      }
     }
   }, [posts]);
 

@@ -217,6 +217,11 @@ function PostPage({ post, postUrl, description }: PostPageProps): VNode {
         <link rel="stylesheet" href="/assets/prism-tomorrow.css" />
         <script src="/assets/prism-bundle.min.js"></script>
 
+        {/* KaTeX for math rendering */}
+        <link rel="stylesheet" href="/assets/katex.min.css" />
+        <script src="/assets/katex.min.js"></script>
+        <script src="/assets/auto-render.min.js"></script>
+
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -346,6 +351,23 @@ function PostPage({ post, postUrl, description }: PostPageProps): VNode {
             View all posts
           </a>
         </div>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.addEventListener('DOMContentLoaded', function() {
+                if (typeof renderMathInElement !== 'undefined') {
+                  renderMathInElement(document.querySelector('.content'), {
+                    delimiters: [
+                      { left: '$$', right: '$$', display: true },
+                      { left: '$', right: '$', display: false },
+                    ],
+                    throwOnError: false,
+                  });
+                }
+              });
+            `,
+          }}
+        />
       </body>
     </html>
   );
