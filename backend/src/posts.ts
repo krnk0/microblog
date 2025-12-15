@@ -23,16 +23,38 @@ export async function handleGetPost(
   });
 }
 
-// GET /api/posts - 投稿一覧取得
+// GET /api/posts - 投稿一覧取得（ページネーション対応）
 export async function handleGetPosts(
+  request: Request,
   env: Env,
   corsHeaders: Record<string, string>
 ): Promise<Response> {
-  const { results } = await env.DB.prepare(
-    'SELECT * FROM posts ORDER BY created_at DESC LIMIT 50'
-  ).all<Post>();
+  const url = new URL(request.url);
+  const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
+  const offset = (page - 1) * limit;
 
-  return new Response(JSON.stringify({ posts: results }), {
+  // 総件数を取得
+  const countResult = await env.DB.prepare('SELECT COUNT(*) as count FROM posts').first<{ count: number }>();
+  const total = countResult?.count || 0;
+  const totalPages = Math.ceil(total / limit);
+
+  // 投稿を取得
+  const { results } = await env.DB.prepare(
+    'SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?'
+  ).bind(limit, offset).all<Post>();
+
+  return new Response(JSON.stringify({
+    posts: results,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    }
+  }), {
     status: 200,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });

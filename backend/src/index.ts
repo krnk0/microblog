@@ -47,7 +47,7 @@ export default {
 
       // Posts routes
       if (url.pathname === '/api/posts' && request.method === 'GET') {
-        return await handleGetPosts(env, corsHeaders);
+        return await handleGetPosts(request, env, corsHeaders);
       }
 
       const getPostMatch = url.pathname.match(/^\/api\/posts\/(\d+)$/);

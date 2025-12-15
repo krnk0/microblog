@@ -1,25 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Post } from '../types';
 import { formatContent } from '../utils/formatContent';
 
 declare const Prism: { highlightAll: () => void } | undefined;
 declare const renderMathInElement: ((element: Element, options?: object) => void) | undefined;
 
+interface Pagination {
+  page: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+
   const [posts, setPosts] = useState<Post[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
 
   // 投稿一覧を取得
-  const fetchPosts = async () => {
+  const fetchPosts = async (page: number) => {
     try {
-      const res = await fetch(`${API_URL}/api/posts`);
+      const res = await fetch(`${API_URL}/api/posts?page=${page}`);
       if (!res.ok) throw new Error('Failed to fetch posts');
       const data = await res.json();
       setPosts(data.posts || []);
+      setPagination(data.pagination || null);
     } catch (err) {
       console.error('Error fetching posts:', err);
     } finally {
@@ -27,10 +40,10 @@ export default function Home() {
     }
   };
 
-  // 初回読み込み
+  // ページ変更時に再取得
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    fetchPosts(currentPage);
+  }, [currentPage]);
 
   // Prism.js でシンタックスハイライト
   useEffect(() => {
@@ -96,6 +109,44 @@ export default function Home() {
           ))
         )}
       </div>
+
+      {/* ページネーション */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex justify-center gap-4 mt-8">
+          {pagination.hasPrev ? (
+            <a
+              href={currentPage === 2 ? '/' : `/?page=${currentPage - 1}`}
+              className="px-4 py-2 bg-foreground/5 border border-foreground/10 rounded-lg hover:bg-foreground/10 transition-colors"
+            >
+              ←
+            </a>
+          ) : (
+            <span className="px-4 py-2 bg-foreground/5 border border-foreground/10 rounded-lg text-foreground/20 cursor-not-allowed">
+              ←
+            </span>
+          )}
+          {pagination.hasNext ? (
+            <a
+              href={`/?page=${currentPage + 1}`}
+              className="px-4 py-2 bg-foreground/5 border border-foreground/10 rounded-lg hover:bg-foreground/10 transition-colors"
+            >
+              →
+            </a>
+          ) : (
+            <span className="px-4 py-2 bg-foreground/5 border border-foreground/10 rounded-lg text-foreground/20 cursor-not-allowed">
+              →
+            </span>
+          )}
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="max-w-2xl mx-auto p-4 sm:p-6"><p className="text-foreground/40">Loading...</p></div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
