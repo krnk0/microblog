@@ -380,9 +380,10 @@ export default function AdminPage() {
           </p>
         ) : (
           posts.map((post) => (
-            <article
+            <a
               key={post.id}
-              className="p-4 bg-foreground/5 border border-foreground/10 rounded-lg"
+              href={`/posts/${post.id}`}
+              className="block p-4 bg-foreground/5 border border-foreground/10 rounded-lg hover:bg-foreground/10 transition-colors"
             >
               <div className="whitespace-pre-wrap break-words mb-2">
                 {formatContent(post.content)}
@@ -399,13 +400,17 @@ export default function AdminPage() {
                   {new Date(post.created_at).toLocaleString('ja-JP')}
                 </time>
                 <button
-                  onClick={() => handleDelete(post.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDelete(post.id);
+                  }}
                   className="text-red-500 hover:text-red-400 text-sm"
                 >
                   削除
                 </button>
               </div>
-            </article>
+            </a>
           ))
         )}
       </div>
