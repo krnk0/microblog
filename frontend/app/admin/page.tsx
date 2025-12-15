@@ -68,20 +68,13 @@ export default function AdminPage() {
     }
   }, [posts]);
 
-  // 認証状態を確認（投稿作成APIで401が返ればログアウト状態）
+  // 認証状態を確認
   const checkAuth = async () => {
     try {
-      // 認証が必要なエンドポイントにリクエストして確認
-      const res = await fetch(`${API_URL}/api/posts`, {
-        method: 'POST',
+      const res = await fetch(`${API_URL}/api/auth/me`, {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: '' }),
       });
-      // 空コンテンツなので400が返るが、401でなければ認証済み
-      if (res.status !== 401) {
-        setIsAuthenticated(true);
-      }
+      setIsAuthenticated(res.ok);
     } catch (err) {
       console.error('Auth check failed:', err);
     } finally {

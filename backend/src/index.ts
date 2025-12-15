@@ -1,5 +1,5 @@
 import type { Env } from './types';
-import { isAuthenticated, handleLogin, handleLogout } from './auth';
+import { isAuthenticated, handleLogin, handleLogout, handleMe } from './auth';
 import { handleGetPost, handleGetPosts, handleCreatePost, handleDeletePost } from './posts';
 import { handleUploadMedia, handleGetMedia } from './media';
 import { handleRssFeed } from './feed';
@@ -39,6 +39,10 @@ export default {
 
       if (url.pathname === '/api/auth/logout' && request.method === 'POST') {
         return await handleLogout(corsHeaders);
+      }
+
+      if (url.pathname === '/api/auth/me' && request.method === 'GET') {
+        return await handleMe(request, env, corsHeaders);
       }
 
       // Posts routes

@@ -101,3 +101,22 @@ export async function handleLogout(corsHeaders: Record<string, string>): Promise
     },
   });
 }
+
+// GET /api/auth/me - 認証状態確認
+export async function handleMe(
+  request: Request,
+  env: Env,
+  corsHeaders: Record<string, string>
+): Promise<Response> {
+  if (!(await isAuthenticated(request, env))) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify({ authenticated: true }), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
