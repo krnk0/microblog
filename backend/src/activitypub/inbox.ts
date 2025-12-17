@@ -21,6 +21,9 @@ interface Actor {
   id: string;
   inbox: string;
   type: string;
+  endpoints?: {
+    sharedInbox?: string;
+  };
 }
 
 export async function handleInbox(request: Request, env: Env): Promise<Response> {
@@ -98,10 +101,35 @@ export async function handleInbox(request: Request, env: Env): Promise<Response>
 
     if (!response.ok) {
       console.error('Failed to send Accept:', response.status);
+    } else {
+      // Save follower to database after successful Accept
+      await saveFollower(env.DB, followerActor);
     }
   } catch (error) {
     console.error('Error sending Accept:', error);
   }
 
   return new Response('', { status: 202 });
+}
+
+/**
+ * Save follower to database
+ */
+async function saveFollower(db: D1Database, actor: Actor): Promise<void> {
+  const now = new Date().toISOString();
+  const sharedInbox = actor.endpoints?.sharedInbox || null;
+
+  try {
+    await db
+      .prepare(
+        `INSERT OR REPLACE INTO followers (actor_id, inbox_url, shared_inbox_url, created_at)
+         VALUES (?, ?, ?, COALESCE((SELECT created_at FROM followers WHERE actor_id = ?), ?))`
+      )
+      .bind(actor.id, actor.inbox, sharedInbox, actor.id, now)
+      .run();
+
+    console.log('Saved follower:', actor.id);
+  } catch (error) {
+    console.error('Failed to save follower:', error);
+  }
 }
