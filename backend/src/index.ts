@@ -5,8 +5,15 @@ import { handleUploadMedia, handleGetMedia } from './media';
 import { handleRssFeed } from './feed';
 import { handleWebFinger, handleHostMeta, handleActor, handleOutbox, handleInbox, handlePost, handleFollowing, handleFollowers, handleFeatured } from './activitypub';
 import { handlePostPage } from './pages/post';
+import { runBackup } from './backup';
 
 export default {
+  // Scheduled handler for Cron Triggers
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    console.log('Cron trigger fired:', event.cron);
+    ctx.waitUntil(runBackup(env));
+  },
+
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 

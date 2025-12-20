@@ -24,5 +24,9 @@ database_id = "0401e205-3639-479f-a203-46c664010b23"
 binding = "MEDIA"
 bucket_name = "microblog-media"
 
+# Cron Triggers (daily backup at midnight UTC)
+[triggers]
+crons = ["0 0 * * *"]
+
 # Workers Secrets (ローカル開発用は .dev.vars に記載)
 # AUTH_PASSWORD = "your-password-here"
