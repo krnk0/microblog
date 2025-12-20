@@ -1,10 +1,12 @@
 /**
  * ActivityPub Inbox handler
  * Receives Follow/Undo activities and processes them
+ * Verifies HTTP Signatures for security
  */
 
 import type { Env } from '../types';
 import { getPrivateKey, signRequest } from './keys';
+import { verifyHttpSignature } from './httpsig';
 
 const API_DOMAIN = 'mb.krnk.app';
 const USER_ID = 'default';
@@ -41,11 +43,33 @@ interface Actor {
 }
 
 export async function handleInbox(request: Request, env: Env): Promise<Response> {
+  // Read body first (needed for both signature verification and JSON parsing)
+  const body = await request.text();
+
+  // Verify HTTP Signature
+  const sigResult = await verifyHttpSignature(request, body);
+  if (!sigResult.valid) {
+    console.error('HTTP Signature verification failed:', sigResult.error);
+    // Return 202 for actor-gone cases to stop retries (like Mastodon does)
+    if (sigResult.error?.includes('Failed to fetch actor')) {
+      return new Response('', { status: 202 });
+    }
+    return new Response(sigResult.error || 'Invalid signature', { status: 401 });
+  }
+
+  console.log('HTTP Signature verified for actor:', sigResult.actorId);
+
   let activity: Activity;
   try {
-    activity = await request.json();
+    activity = JSON.parse(body);
   } catch {
     return new Response('Invalid JSON', { status: 400 });
+  }
+
+  // Verify activity.actor matches the signed actor
+  if (activity.actor !== sigResult.actorId) {
+    console.error('Actor mismatch: activity.actor', activity.actor, '!= signed actor', sigResult.actorId);
+    return new Response('Actor mismatch', { status: 403 });
   }
 
   console.log('Inbox received:', activity.type, 'from', activity.actor);
