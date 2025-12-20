@@ -1,6 +1,6 @@
 /**
  * ActivityPub Inbox handler
- * Receives Follow activities and sends Accept responses
+ * Receives Follow/Undo activities and processes them
  */
 
 import type { Env } from '../types';
@@ -9,12 +9,26 @@ import { getPrivateKey, signRequest } from './keys';
 const API_DOMAIN = 'mb.krnk.app';
 const USER_ID = 'default';
 
+// Known ActivityPub activity types
+type ActivityTypeName =
+  | 'Follow'
+  | 'Undo'
+  | 'Accept'
+  | 'Reject'
+  | 'Create'
+  | 'Update'
+  | 'Delete'
+  | 'Like'
+  | 'Announce'
+  | 'Add'
+  | 'Remove';
+
 interface Activity {
   '@context'?: string | string[];
   id: string;
-  type: string;
+  type: ActivityTypeName;
   actor: string;
-  object: string | object;
+  object: string | Activity;
 }
 
 interface Actor {
@@ -36,11 +50,22 @@ export async function handleInbox(request: Request, env: Env): Promise<Response>
 
   console.log('Inbox received:', activity.type, 'from', activity.actor);
 
-  // Only handle Follow for now
-  if (activity.type !== 'Follow') {
-    console.log('Ignoring activity type:', activity.type);
-    return new Response('', { status: 202 });
+  // Route by activity type
+  switch (activity.type) {
+    case 'Follow':
+      return handleFollow(activity, env);
+    case 'Undo':
+      return handleUndo(activity, env);
+    default:
+      console.log('Ignoring activity type:', activity.type);
+      return new Response('', { status: 202 });
   }
+}
+
+/**
+ * Handle Follow activity - send Accept and save follower
+ */
+async function handleFollow(activity: Activity, env: Env): Promise<Response> {
 
   // Get the follower's Actor to find their inbox
   let followerActor: Actor;
@@ -131,5 +156,55 @@ async function saveFollower(db: D1Database, actor: Actor): Promise<void> {
     console.log('Saved follower:', actor.id);
   } catch (error) {
     console.error('Failed to save follower:', error);
+  }
+}
+
+/**
+ * Handle Undo activity - currently only supports Undo(Follow)
+ */
+async function handleUndo(activity: Activity, env: Env): Promise<Response> {
+  // Undo wraps another activity in its object
+  if (typeof activity.object === 'string') {
+    console.log('Undo object is a string reference, ignoring');
+    return new Response('', { status: 202 });
+  }
+
+  const innerActivity = activity.object;
+
+  // Only handle Undo(Follow)
+  if (innerActivity.type !== 'Follow') {
+    console.log('Ignoring Undo for:', innerActivity.type);
+    return new Response('', { status: 202 });
+  }
+
+  // Security: verify the Undo actor matches the original Follow actor
+  if (activity.actor !== innerActivity.actor) {
+    console.error('Actor mismatch: Undo actor', activity.actor, '!= Follow actor', innerActivity.actor);
+    return new Response('Actor mismatch', { status: 403 });
+  }
+
+  // Remove follower from database
+  await removeFollower(env.DB, activity.actor);
+
+  return new Response('', { status: 202 });
+}
+
+/**
+ * Remove follower from database
+ */
+async function removeFollower(db: D1Database, actorId: string): Promise<void> {
+  try {
+    const result = await db
+      .prepare('DELETE FROM followers WHERE actor_id = ?')
+      .bind(actorId)
+      .run();
+
+    if (result.meta.changes > 0) {
+      console.log('Removed follower:', actorId);
+    } else {
+      console.log('Follower not found:', actorId);
+    }
+  } catch (error) {
+    console.error('Failed to remove follower:', error);
   }
 }

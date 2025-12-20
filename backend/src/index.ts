@@ -130,7 +130,7 @@ export default {
       }
 
       if (url.pathname === '/api/activitypub/featured' && request.method === 'GET') {
-        return await handleFeatured(env);
+        return handleFeatured();
       }
 
       const apPostMatch = url.pathname.match(/^\/api\/activitypub\/posts\/(\d+)$/);
