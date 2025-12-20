@@ -1,4 +1,5 @@
 import type { Env, Post, CreatePostRequest } from './types';
+import { deliverToFollowers } from './activitypub/delivery';
 
 // GET /api/posts/:id - 単一投稿取得
 export async function handleGetPost(
@@ -64,7 +65,8 @@ export async function handleGetPosts(
 export async function handleCreatePost(
   request: Request,
   env: Env,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
+  ctx?: ExecutionContext
 ): Promise<Response> {
   const body = await request.json<CreatePostRequest>();
 
@@ -91,6 +93,18 @@ export async function handleCreatePost(
     : await env.DB.prepare(
         'INSERT INTO posts (content, created_at) VALUES (?, datetime("now") || "Z") RETURNING *'
       ).bind(body.content).first<Post>();
+
+  // Deliver to followers in background (don't block response)
+  if (result && ctx) {
+    ctx.waitUntil(
+      deliverToFollowers(result, env).then((stats) => {
+        console.log(`Delivery complete: ${stats.delivered} delivered, ${stats.failed} failed`);
+        if (stats.errors.length > 0) {
+          console.log('Delivery errors:', stats.errors);
+        }
+      })
+    );
+  }
 
   return new Response(JSON.stringify({ post: result }), {
     status: 201,

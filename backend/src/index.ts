@@ -63,7 +63,7 @@ export default {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        return await handleCreatePost(request, env, corsHeaders);
+        return await handleCreatePost(request, env, corsHeaders, ctx);
       }
 
       const deleteMatch = url.pathname.match(/^\/api\/posts\/(\d+)$/);
