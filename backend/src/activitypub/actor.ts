@@ -32,6 +32,11 @@ export async function handleActor(env: Env): Promise<Response> {
     name: 'krnk0',
     summary: 'Personal microblog',
     url: `https://${DOMAIN}`,
+    icon: {
+      type: 'Image',
+      mediaType: 'image/jpeg',
+      url: `https://${DOMAIN}/avatar.jpg`,
+    },
     inbox: `https://${API_DOMAIN}/api/activitypub/inbox`,
     outbox: `https://${API_DOMAIN}/api/activitypub/outbox`,
     followers: `https://${API_DOMAIN}/api/activitypub/followers`,
