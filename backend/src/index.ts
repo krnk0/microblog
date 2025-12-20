@@ -82,7 +82,7 @@ export default {
           });
         }
         const postId = parseInt(deleteMatch[1]);
-        return await handleDeletePost(postId, env, corsHeaders);
+        return await handleDeletePost(postId, env, corsHeaders, ctx);
       }
 
       // Media routes

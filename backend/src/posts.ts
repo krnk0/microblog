@@ -1,5 +1,5 @@
 import type { Env, Post, CreatePostRequest } from './types';
-import { deliverToFollowers } from './activitypub/delivery';
+import { deliverToFollowers, deliverDeleteToFollowers } from './activitypub/delivery';
 
 // GET /api/posts/:id - 単一投稿取得
 export async function handleGetPost(
@@ -116,7 +116,8 @@ export async function handleCreatePost(
 export async function handleDeletePost(
   postId: number,
   env: Env,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
+  ctx?: ExecutionContext
 ): Promise<Response> {
   const result = await env.DB.prepare(
     'DELETE FROM posts WHERE id = ? RETURNING *'
@@ -127,6 +128,18 @@ export async function handleDeletePost(
       status: 404,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+  }
+
+  // Deliver Delete to followers in background
+  if (ctx) {
+    ctx.waitUntil(
+      deliverDeleteToFollowers(postId, env).then((stats) => {
+        console.log(`Delete delivery complete: ${stats.delivered} delivered, ${stats.failed} failed`);
+        if (stats.errors.length > 0) {
+          console.log('Delete delivery errors:', stats.errors);
+        }
+      })
+    );
   }
 
   return new Response(JSON.stringify({ message: 'Post deleted', post: result }), {

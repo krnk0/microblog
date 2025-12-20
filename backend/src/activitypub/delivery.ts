@@ -169,6 +169,29 @@ function buildCreateActivity(post: Post): object {
 }
 
 /**
+ * Build a Delete activity for a post
+ */
+function buildDeleteActivity(postId: number): object {
+  const actorUrl = `https://${DOMAIN}/api/activitypub/actor`;
+  const postUrl = `https://${DOMAIN}/api/activitypub/posts/${postId}`;
+  const followersUrl = `https://${DOMAIN}/api/activitypub/followers`;
+  const publicTarget = 'https://www.w3.org/ns/activitystreams#Public';
+
+  return {
+    '@context': 'https://www.w3.org/ns/activitystreams',
+    id: `${postUrl}#delete`,
+    type: 'Delete',
+    actor: actorUrl,
+    to: [publicTarget],
+    cc: [followersUrl],
+    object: {
+      id: postUrl,
+      type: 'Tombstone',
+    },
+  };
+}
+
+/**
  * Deliver a post to all followers
  * Uses shared inbox when available to reduce requests
  */
@@ -233,6 +256,71 @@ export async function deliverToFollowers(
       }
     } catch (error) {
       console.error(`Error delivering to ${inbox}:`, error);
+      failed += actorIds.length;
+      errors.push(`${inbox}: ${error instanceof Error ? error.message : 'unknown'}`);
+    }
+  }
+
+  return { delivered, failed, errors };
+}
+
+/**
+ * Deliver a Delete activity to all followers
+ */
+export async function deliverDeleteToFollowers(
+  postId: number,
+  env: Env
+): Promise<{ delivered: number; failed: number; errors: string[] }> {
+  const { results: followers } = await env.DB.prepare(
+    'SELECT * FROM followers'
+  ).all<Follower>();
+
+  if (!followers || followers.length === 0) {
+    console.log('No followers to deliver Delete to');
+    return { delivered: 0, failed: 0, errors: [] };
+  }
+
+  const privateKey = await getPrivateKey(env.DB, 'default');
+  if (!privateKey) {
+    console.error('No private key found for signing');
+    return { delivered: 0, failed: followers.length, errors: ['No private key'] };
+  }
+
+  const actorUrl = `https://${DOMAIN}/api/activitypub/actor`;
+  const keyId = `${actorUrl}#main-key`;
+  const activity = buildDeleteActivity(postId);
+  const activityBody = JSON.stringify(activity);
+
+  // Deduplicate by shared inbox
+  const inboxes = new Map<string, string[]>();
+  for (const follower of followers) {
+    const inbox = follower.shared_inbox_url || follower.inbox_url;
+    const actors = inboxes.get(inbox) || [];
+    actors.push(follower.actor_id);
+    inboxes.set(inbox, actors);
+  }
+
+  console.log(`Delivering Delete to ${inboxes.size} inboxes (${followers.length} followers)`);
+
+  let delivered = 0;
+  let failed = 0;
+  const errors: string[] = [];
+
+  for (const [inbox, actorIds] of inboxes) {
+    try {
+      const signedHeaders = await signRequest(inbox, activityBody, privateKey, keyId);
+      const result = await deliverToInbox(inbox, activityBody, signedHeaders);
+
+      if (result.success) {
+        console.log(`Delivered Delete to ${inbox}`);
+        delivered += actorIds.length;
+      } else {
+        console.error(`Failed to deliver Delete to ${inbox}: ${result.error}`);
+        failed += actorIds.length;
+        errors.push(`${inbox}: ${result.error}`);
+      }
+    } catch (error) {
+      console.error(`Error delivering Delete to ${inbox}:`, error);
       failed += actorIds.length;
       errors.push(`${inbox}: ${error instanceof Error ? error.message : 'unknown'}`);
     }
