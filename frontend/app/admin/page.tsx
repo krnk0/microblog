@@ -23,10 +23,15 @@ function AdminContent() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const [posts, setPosts] = useState<Post[]>([]);
+  const [allPosts, setAllPosts] = useState<Post[]>([]); // 検索用の全投稿
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 検索関連
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   // 画像関連
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -47,6 +52,50 @@ function AdminContent() {
       console.error('Error fetching posts:', err);
     }
   };
+
+  // 検索用に全投稿を取得
+  const fetchAllPosts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/posts?limit=1000`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to fetch posts');
+      const data = await res.json();
+      setAllPosts(data.posts || []);
+    } catch (err) {
+      console.error('Error fetching all posts:', err);
+    }
+  };
+
+  // 検索クリア
+  const clearSearch = () => {
+    setSearchQuery('');
+    setIsSearching(false);
+  };
+
+  // 検索クエリ変更時の処理（debounce付き）
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setIsSearching(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setIsSearching(true);
+      if (allPosts.length === 0) {
+        fetchAllPosts();
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // 検索結果
+  const filteredPosts = isSearching
+    ? allPosts.filter((post) =>
+        post.content.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : posts;
 
   // 初回読み込み（認証状態確認）
   useEffect(() => {
@@ -295,19 +344,45 @@ function AdminContent() {
   // 認証後
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
-      <header className="mb-8 flex justify-between items-center">
-        <h1 className="text-2xl font-normal">
-          Admin <span className="text-foreground/40">|</span>{' '}
-          <a href="/" className="hover:opacity-70 transition-opacity">
-            Timeline
-          </a>
-        </h1>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-foreground/60 hover:text-foreground transition-opacity"
-        >
-          Logout
-        </button>
+      <header className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-normal">
+            Admin <span className="text-foreground/40">|</span>{' '}
+            <a href="/" className="hover:opacity-70 transition-opacity">
+              Timeline
+            </a>
+          </h1>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-foreground/60 hover:text-foreground transition-opacity"
+          >
+            Logout
+          </button>
+        </div>
+        {/* 検索バー */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Escape' && clearSearch()}
+            placeholder="検索..."
+            className="w-full p-2 bg-foreground/5 border border-foreground/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        {isSearching && (
+          <p className="mt-2 text-sm text-foreground/60">
+            {filteredPosts.length}件の検索結果
+          </p>
+        )}
       </header>
 
       {/* 投稿フォーム */}
@@ -368,10 +443,10 @@ function AdminContent() {
       </form>
 
       {/* タイムライン */}
-      <PostList posts={posts} showDelete onDelete={handleDelete} />
+      <PostList posts={filteredPosts} showDelete onDelete={handleDelete} />
 
-      {/* ページネーション */}
-      {pagination && (
+      {/* ページネーション（検索中は非表示） */}
+      {!isSearching && pagination && (
         <Pagination
           pagination={pagination}
           currentPage={currentPage}
